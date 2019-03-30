@@ -6,16 +6,30 @@
   <title>map</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol/ol.css">
   <style type="text/css">
-    html, body, #map {
+    html, body, .container {
       padding: 0px;
       margin:0px;
       height:100%;
       width:100%
     }
+    .container {
+      display: flex;
+      justify-content: center; /* 水平居中 */
+      align-items: center;
+    }
+
+    #map {
+      padding: 0px;
+      margin:0px;
+      height: 500px;
+      width: 500px;
+    }
   </style>
 </head>
 <body>
-<div id="map"></div>
+<div class="container">
+  <div id="map"></div>
+</div>
 <script src="./index.js"></script>
 </body>
 </html>
