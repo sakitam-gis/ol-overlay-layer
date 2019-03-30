@@ -5,6 +5,7 @@
   "author": "sakitam-fdd <smilefdd@gmail.com>",
   "homepage": "",
   "private": false,
+  "types": "types/src/index.d.ts",
   "unpkg": "dist/OverlayLayer.js",
   "main": "dist/OverlayLayer.js",
   "module": "dist/OverlayLayer.esm.js",

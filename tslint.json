@@ -67,10 +67,10 @@
     "no-increment-decrement": false
   },
   "include": [
-    "src",
-    "examples"
+    "src"
   ],
   "exclude": [
+    "examples",
     "node_modules"
   ]
 }

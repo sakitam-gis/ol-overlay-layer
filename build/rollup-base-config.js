@@ -20,10 +20,13 @@ module.exports = {
     tslint({
       exclude: [
         'node_modules/**',
+        'examples'
       ]
     }),
     typescript({
       clean: true,
+      // outDir: resolve('types/'),
+      // declarationDir: '',
       useTsconfigDeclarationDir: true,
     }),
     nodeResolve({

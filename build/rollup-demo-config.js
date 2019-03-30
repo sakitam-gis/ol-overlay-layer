@@ -1,4 +1,5 @@
 const serve = require('rollup-plugin-serve');
+const typescript = require('rollup-plugin-typescript2');
 const { banner, resolve } = require('./helper');
 const baseConfig = require('./rollup-base-config');
 
@@ -16,12 +17,26 @@ baseConfig.plugins.push(// Default options
   })
 );
 
-module.exports = Object.assign(baseConfig, {
+const config = Object.assign(baseConfig, {
   input: resolve('examples/index.ts'),
   output: {
-    file: 'index.js',
+    file: './examples/index.js',
     format: 'iife',
     // name: _package.namespace,
     banner: banner,
-  }
+  },
+  external: undefined
 });
+
+const index = config.plugins.findIndex(item => item.name === 'rpt2');
+const index1 = config.plugins.findIndex(item => item.name === 'tslint');
+config.plugins.splice(index, 1, typescript({
+  clean: false,
+  // outDir: resolve('types/'),
+  declarationDir: 'examples',
+  useTsconfigDeclarationDir: false,
+}),);
+
+config.plugins.splice(index1, 1);
+
+module.exports = config;
