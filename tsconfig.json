@@ -36,8 +36,10 @@
     ]
   },
   "include": [
-    "src",
-    "examples",
+    "src"
+  ],
+  "exclude": [
+    "dist",
     "types"
   ]
 }

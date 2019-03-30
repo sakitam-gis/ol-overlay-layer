@@ -25,9 +25,11 @@ const map = new Map({
   }),
 });
 
+const div = document.createElement('div');
+
 const marker = new OverlayLayer({
   positioning: 'center-center',
-  element: document.getElementById('marker'),
+  element: div,
   stopEvent: false,
 });
 

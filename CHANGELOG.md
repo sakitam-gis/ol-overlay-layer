@@ -1,3 +1,4 @@
 ## 0.0.1
 
-* 新建项目
+* code and readme
+* add examples to useful
