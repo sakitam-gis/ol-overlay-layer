@@ -26,29 +26,6 @@ const merge = (a: any, b: any): any => {
 };
 
 /**
- * get parent container
- * @param selector
- * @param doc
- */
-const getTarget = (selector: string, doc = document) => {
-  const dom = (function () {
-    let found;
-    return doc && /^#([\w-]+)$/.test(selector)
-      ? (found = doc.getElementById(RegExp.$1)) // eslint-disable-line
-        ? [found]
-        : [] // eslint-disable-line
-      : Array.prototype.slice.call(
-        /^\.([\w-]+)$/.test(selector)
-          ? doc.getElementsByClassName(RegExp.$1)
-          : /^[\w-]+$/.test(selector)
-            ? doc.getElementsByTagName(selector)
-            : doc.querySelectorAll(selector),
-      );
-  })();
-  return dom;
-};
-
-/**
  * bind context
  * @param func
  * @param context
@@ -82,4 +59,4 @@ const arrayAdd = function (array: any[], item: any): any[] {
   return array;
 };
 
-export { getTarget, merge, isObject, bind, arrayAdd };
+export { merge, isObject, bind, arrayAdd };

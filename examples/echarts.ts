@@ -1,7 +1,7 @@
 // @ts-ignore
 import { Map } from 'ol';
 // @ts-ignore
-import * as echarts from 'echarts';
+import echarts from 'echarts';
 import { merge, isObject, arrayAdd } from './helper';
 import formatGeoJSON from './coordinate/formatGeoJSON';
 import getCoordinateSystem from './coordinate/RegisterCoordinateSystem';
@@ -187,8 +187,7 @@ class EChartsLayer extends OverlayLayer{
     super.render();
     if (!this.$chart) {
       // @ts-ignore
-      const element = this.getElement();
-      this.$chart = echarts.init(element);
+      this.$chart = echarts.init(this.element);
       if (this.$chartOptions) {
         this.registerMap();
         this.$chart.setOption(this.reConverData(this.$chartOptions), false);
@@ -197,6 +196,19 @@ class EChartsLayer extends OverlayLayer{
       this.$chart.resize();
       this.reRender();
     }
+  }
+
+  updateViewSize(size: number[]): void {
+    super.updateViewSize(size);
+    this.onResize();
+  }
+
+  onResize () {
+    this.clearAndRedraw();
+    this.dispatchEvent({
+      type: 'change:size',
+      source: this,
+    });
   }
 
   /**
@@ -260,6 +272,7 @@ class EChartsLayer extends OverlayLayer{
     if (series && series.length > 0) {
       if (!this._coordinateSystem) {
         const _cs = getCoordinateSystem(this.getMap(), this.$options);
+        // @ts-ignore
         this._coordinateSystem = new _cs();
       }
       if (series && isObject(series)) {

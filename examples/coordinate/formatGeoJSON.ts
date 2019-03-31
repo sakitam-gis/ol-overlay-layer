@@ -2,7 +2,7 @@
  * form https://github.com/ecomfe/echarts/blob/master/src/coord/geo/parseGeoJson.js
  */
 // @ts-ignore
-import * as echarts from 'echarts';
+import echarts from 'echarts';
 /**
  * check is decoded
  * @param json

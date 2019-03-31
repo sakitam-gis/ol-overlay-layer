@@ -13,7 +13,9 @@ import OSM from 'ol/source/OSM';
 import EChartsLayer from './echarts';
 
 const layer = new TileLayer({
-  source: new OSM(),
+  source: new OSM({
+    url: 'https://cartodb-basemaps-{a-d}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
+  }),
 });
 
 const map = new Map({

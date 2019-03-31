@@ -100,7 +100,7 @@ class OverlayLayer extends Overlay {
       this.updateViewSize(mapSize);
     } else {
       const _update = this._size[0] === 0 || this._size[1] === 0
-        || (this._size[0] !== mapSize[0] && this._size[1] !== mapSize[1]);
+        || (this._size[0] !== mapSize[0] || this._size[1] !== mapSize[1]);
       _update && this.updateViewSize(mapSize);
     }
     this.updateRenderedPosition([0, 0], mapSize);
