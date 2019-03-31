@@ -2,6 +2,8 @@
 
 > a domLayer extend Overlay
 
+[待发布]
+
 [![Build Status](https://travis-ci.org/sakitam-gis/ol-overlay-layer.svg?branch=master)](https://www.travis-ci.org/sakitam-gis/ol-overlay-layer)
 [![NPM downloads](https://img.shields.io/npm/dm/ol-overlay-layer.svg)](https://npmjs.org/package/ol-overlay-layer)
 [![GitHub stars](https://img.shields.io/github/stars/sakitam-gis/ol-overlay-layer.svg)](https://github.com/sakitam-gis/ol-overlay-layer/stargazers)
