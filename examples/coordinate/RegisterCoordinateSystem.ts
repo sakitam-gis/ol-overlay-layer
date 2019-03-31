@@ -6,8 +6,8 @@
 // @ts-ignore
 import * as echarts from 'echarts';
 // @ts-ignore
-import * as ol from 'openlayers';
-import { map as $map, bind } from '../helper';
+import { transform } from 'ol/proj';
+import { bind } from '../helper';
 
 const getCoordinateSystem = function (
   map: any,
@@ -20,36 +20,55 @@ const getCoordinateSystem = function (
 
     static dimensions = RegisterCoordinateSystem.prototype.dimensions || ['lng', 'lat'];
 
-    static create = function (echartModel, api) {
-      echartModel.eachSeries(function (seriesModel) {
+    static create (echartModel: any) {
+      echartModel.eachSeries((seriesModel: any) => {
         if (seriesModel.get('coordinateSystem') === 'openlayers') {
           seriesModel.coordinateSystem = new RegisterCoordinateSystem();
         }
       });
-    };
+    }
 
-    static dataToCoordSize = function (dataSize, dataItem) {
-      dataItem = dataItem || [0, 0];
-      // @ts-ignore
-      return $map(
-        [0, 1],
-        function (dimIdx) {
-          let val = dataItem[dimIdx];
-          let halfSize = dataSize[dimIdx] / 2;
-          let [p1, p2] = [[], []];
-          p1[dimIdx] = val - halfSize;
-          p2[dimIdx] = val + halfSize;
-          p1[1 - dimIdx] = p2[1 - dimIdx] = dataItem[1 - dimIdx];
-          return Math.abs(this.dataToPoint(p1)[dimIdx] - this.dataToPoint(p2)[dimIdx]);
-        },
+    static dataToCoordSize (dataSize: number[], dataItem: number[] = [0, 0]) {
+      return echarts.util.map([0, 1], (dimIdx: number) => {
+        const val = dataItem[dimIdx];
+        const p1: number[] = [];
+        const p2: number[] = [];
+        const halfSize = dataSize[dimIdx] / 2;
+        p1[dimIdx] = val - halfSize;
+        p2[dimIdx] = val + halfSize;
+        p1[1 - dimIdx] = p2[1 - dimIdx] = dataItem[1 - dimIdx];
+        // @ts-ignore
+        const offset: number = this.dataToPoint(p1)[dimIdx] - this.dataToPoint(p2)[dimIdx];
+        return Math.abs(offset);
+      },
         this,
       );
-    };
+    }
+
+    /**
+     * 获取地图视图投影
+     * @returns {string}
+     * @private
+     */
+    static getProjectionCode (): string {
+      let code: string = '';
+      if (map) {
+        code =
+          map.getView() &&
+          map
+            .getView()
+            .getProjection()
+            .getCode();
+      } else {
+        code = 'EPSG:3857';
+      }
+      return code;
+    }
 
     constructor() {
       this._mapOffset = [0, 0];
       this.dimensions = ['lng', 'lat'];
-      this.projCode = this.getProjectionCode();
+      this.projCode = RegisterCoordinateSystem.getProjectionCode();
     }
 
     /**
@@ -82,43 +101,25 @@ const getCoordinateSystem = function (
 
     /**
      * 跟据坐标转换成屏幕像素
-     * @param coords
+     * @param data
      * @returns {}
      */
-    dataToPoint (coords: []): number[] {
-      if (coords && Array.isArray(coords) && coords.length > 0) {
-        coords = coords.map((item) => {
+    dataToPoint (data: []): number[] {
+      let coords;
+      if (data && Array.isArray(data) && data.length > 0) {
+        coords = data.map((item: string | number): number => {
+          let res: number = 0;
           if (typeof item === 'string') {
-            item = Number(item);
+            res = Number(item);
           }
-          return item;
+          return res;
         });
       }
-      const source = options['source'] || 'EPSG:4326';
-      const destination = options['destination'] || this.projCode_;
-      const pixel = map.getPixelFromCoordinate(ol.proj.transform(coords, source, destination));
+      const source = options && options['source'] || 'EPSG:4326';
+      const destination = options && options['destination'] || this.projCode;
+      const pixel = map.getPixelFromCoordinate(transform(coords, source, destination));
       const mapOffset = this._mapOffset;
       return [pixel[0] - mapOffset[0], pixel[1] - mapOffset[1]];
-    }
-
-    /**
-     * 获取地图视图投影
-     * @returns {string}
-     * @private
-     */
-    getProjectionCode (): string {
-      let code = '';
-      if (map) {
-        code =
-          map.getView() &&
-          map
-            .getView()
-            .getProjection()
-            .getCode();
-      } else {
-        code = 'EPSG:3857';
-      }
-      return code;
     }
 
     /**
@@ -169,9 +170,13 @@ const getCoordinateSystem = function (
       };
     }
   }
+  // const RegisterCoordinateSystem = function () {
+  //   this._mapOffset = [0, 0];
+  //   this.dimensions = ['lng', 'lat'];
+  //   this.projCode = RegisterCoordinateSystem.getProjectionCode();
+  // };
 
   return RegisterCoordinateSystem;
 };
 
-// @ts-ignore
 export default getCoordinateSystem;

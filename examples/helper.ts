@@ -49,25 +49,6 @@ const getTarget = (selector: string, doc = document) => {
 };
 
 /**
- * map items
- * @param {Array} obj
- * @param {Function} cb
- * @param {*} [context]
- * @return {Array}
- */
-const map = function (obj: any[], cb: (value: any, index: number, array: any[]) => any, context: any) {
-  if (!(obj && cb)) return;
-  if (obj.map && obj.map === Array.prototype.map) {
-    return obj.map(cb, context);
-  }
-  const result = [];
-  for (let i = 0, len = obj.length; i < len; i++) {
-    result.push(cb.call(context, obj[i], i, obj));
-  }
-  return result;
-};
-
-/**
  * bind context
  * @param func
  * @param context
@@ -101,4 +82,4 @@ const arrayAdd = function (array: any[], item: any): any[] {
   return array;
 };
 
-export { getTarget, merge, isObject, map, bind, arrayAdd };
+export { getTarget, merge, isObject, bind, arrayAdd };

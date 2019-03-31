@@ -8,7 +8,7 @@ import {
 } from './Overlay';
 
 class OverlayLayer extends Overlay {
-  private element: HTMLElement | undefined;
+  public element: HTMLElement | undefined;
   private _size: Size | undefined;
   constructor(options: object) {
     super(Object.assign(options, {
