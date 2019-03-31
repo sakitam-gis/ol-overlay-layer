@@ -1,10 +1,11 @@
 // @ts-ignore
 import { Map } from 'ol';
 // @ts-ignore
+import { transform } from 'ol/proj';
+// @ts-ignore
 import echarts from 'echarts';
-import { merge, isObject, arrayAdd } from './helper';
+import { merge, isObject, arrayAdd, bind, uuid } from './helper';
 import formatGeoJSON from './coordinate/formatGeoJSON';
-import getCoordinateSystem from './coordinate/RegisterCoordinateSystem';
 import * as charts from './charts/index';
 const _options = {
   forcedRerender: false, // Force re-rendering
@@ -25,6 +26,7 @@ class EChartsLayer extends OverlayLayer{
   private _isRegistered: boolean;
   private _incremental: any[];
   private _coordinateSystem: null | any;
+  private coordinateSystemId: string;
   constructor (chartOptions?: object, options: object = {}, map?: any) {
     super(options);
     /**
@@ -64,6 +66,11 @@ class EChartsLayer extends OverlayLayer{
      * @private
      */
     this._coordinateSystem = null;
+
+    /**
+     * coordinateSystemId
+     */
+    this.coordinateSystemId = '';
 
     if (map) this.appendTo(map);
   }
@@ -216,7 +223,7 @@ class EChartsLayer extends OverlayLayer{
    * @private
    */
   private clearAndRedraw () {
-    if (!this.$chart || this.isVisible()) {
+    if (!this.$chart || !this.isVisible()) {
       return;
     }
     this.dispatchEvent({
@@ -245,7 +252,8 @@ class EChartsLayer extends OverlayLayer{
    */
   private registerMap () {
     if (!this._isRegistered) {
-      echarts.registerCoordinateSystem('openlayers', getCoordinateSystem(this.getMap(), this.$options));
+      this.coordinateSystemId = `openlayers_${uuid()}`;
+      echarts.registerCoordinateSystem(this.coordinateSystemId, this.getCoordinateSystem(this.$options));
       this._isRegistered = true;
     }
     // @ts-ignore
@@ -255,7 +263,7 @@ class EChartsLayer extends OverlayLayer{
       const convertTypes = this.$options && this.$options.convertTypes;
       for (let i = series.length - 1; i >= 0; i--) {
         if (!(convertTypes.indexOf(series[i]['type']) > -1)) {
-          series[i]['coordinateSystem'] = 'openlayers';
+          series[i]['coordinateSystem'] = this.coordinateSystemId;
         }
         series[i]['animation'] = false;
       }
@@ -271,9 +279,9 @@ class EChartsLayer extends OverlayLayer{
     const series = options['series'];
     if (series && series.length > 0) {
       if (!this._coordinateSystem) {
-        const _cs = getCoordinateSystem(this.getMap(), this.$options);
+        const Rc = this.getCoordinateSystem(this.$options);
         // @ts-ignore
-        this._coordinateSystem = new _cs();
+        this._coordinateSystem = new Rc(this.getMap());
       }
       if (series && isObject(series)) {
         // @ts-ignore
@@ -295,6 +303,168 @@ class EChartsLayer extends OverlayLayer{
    */
   private reRender () {
     this.clearAndRedraw();
+  }
+
+  private getCoordinateSystem (options?: object) {
+    const map = this.getMap();
+    const coordinateSystemId = this.coordinateSystemId;
+
+    const RegisterCoordinateSystem = function (map: any) {
+      // @ts-ignore
+      this.map = map;
+      // @ts-ignore
+      this._mapOffset = [0, 0];
+      // @ts-ignore
+      this.dimensions = ['lng', 'lat'];
+      // @ts-ignore
+      this.projCode = RegisterCoordinateSystem.getProjectionCode(this.map);
+    };
+
+    RegisterCoordinateSystem.dimensions = RegisterCoordinateSystem.prototype.dimensions || ['lng', 'lat'];
+
+    /**
+     * get zoom
+     * @returns {number}
+     */
+    RegisterCoordinateSystem.prototype.getZoom = function (): number {
+      return this.map.getView().getZoom();
+    };
+
+    /**
+     * set zoom
+     * @param zoom
+     */
+    RegisterCoordinateSystem.prototype.setZoom = function (zoom: number): void {
+      return this.map.getView().setZoom(zoom);
+    };
+
+    RegisterCoordinateSystem.prototype.getViewRectAfterRoam = function () {
+      return this.getViewRect().clone();
+    };
+
+    /**
+     * 设置地图窗口的偏移
+     * @param mapOffset
+     */
+    RegisterCoordinateSystem.prototype.setMapOffset = function (mapOffset: number[]): void {
+      this._mapOffset = mapOffset;
+    };
+
+    /**
+     * 跟据坐标转换成屏幕像素
+     * @param data
+     * @returns {}
+     */
+    RegisterCoordinateSystem.prototype.dataToPoint = function (data: []): number[] {
+      let coords;
+      if (data && Array.isArray(data) && data.length > 0) {
+        coords = data.map((item: string | number): number => {
+          let res: number = 0;
+          if (typeof item === 'string') {
+            res = Number(item);
+          } else {
+            res = item;
+          }
+          return res;
+        });
+      }
+      const source = options && options['source'] || 'EPSG:4326';
+      const destination = options && options['destination'] || this.projCode;
+      const pixel = this.map.getPixelFromCoordinate(transform(coords, source, destination));
+      const mapOffset = this._mapOffset;
+      return [pixel[0] - mapOffset[0], pixel[1] - mapOffset[1]];
+    };
+
+    /**
+     * 跟据屏幕像素转换成坐标
+     * @param pixel
+     * @returns {}
+     */
+    RegisterCoordinateSystem.prototype.pointToData = function (pixel: number[]): number[] {
+      const mapOffset: number[] = this._mapOffset;
+      return this.map.getCoordinateFromPixel([pixel[0] + mapOffset[0], pixel[1] + mapOffset[1]]);
+    };
+
+    /**
+     * 获取视图矩形范围
+     * @returns {*}
+     */
+    RegisterCoordinateSystem.prototype.getViewRect = function () {
+      const size = this.map.getSize();
+      return new echarts.graphic.BoundingRect(0, 0, size[0], size[1]);
+    };
+
+    /**
+     * create matrix
+     */
+    RegisterCoordinateSystem.prototype.getRoamTransform = function () {
+      return echarts.matrix.create();
+    };
+
+    /**
+     * 处理自定义图表类型
+     * @returns {{coordSys: {type: string, x, y, width, height}, api: {coord, size}}}
+     */
+    RegisterCoordinateSystem.prototype.prepareCustoms = function () {
+      const rect = this.getViewRect();
+      return {
+        coordSys: {
+          // The name exposed to user is always 'cartesian2d' but not 'grid'.
+          type: coordinateSystemId,
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height,
+        },
+        api: {
+          coord: bind(this.dataToPoint, this),
+          size: bind(RegisterCoordinateSystem.dataToCoordsSize, this),
+        },
+      };
+    };
+
+    RegisterCoordinateSystem.create = function (echartModel: any) {
+      echartModel.eachSeries((seriesModel: any) => {
+        if (seriesModel.get('coordinateSystem') === coordinateSystemId) {
+          // @ts-ignore
+          seriesModel.coordinateSystem = new RegisterCoordinateSystem(map);
+        }
+      });
+    };
+
+    RegisterCoordinateSystem.getProjectionCode = function (map: any): string {
+      let code: string = '';
+      if (map) {
+        code =
+          map.getView() &&
+          map
+            .getView()
+            .getProjection()
+            .getCode();
+      } else {
+        code = 'EPSG:3857';
+      }
+      return code;
+    };
+
+    RegisterCoordinateSystem.dataToCoordsSize = function (dataSize: number[], dataItem: number[] = [0, 0]) {
+      return echarts.util.map([0, 1], (dimIdx: number) => {
+        const val = dataItem[dimIdx];
+        const p1: number[] = [];
+        const p2: number[] = [];
+        const halfSize = dataSize[dimIdx] / 2;
+        p1[dimIdx] = val - halfSize;
+        p2[dimIdx] = val + halfSize;
+        p1[1 - dimIdx] = p2[1 - dimIdx] = dataItem[1 - dimIdx];
+        // @ts-ignore
+        const offset: number = this.dataToPoint(p1)[dimIdx] - this.dataToPoint(p2)[dimIdx];
+        return Math.abs(offset);
+      },
+        this,
+      );
+    };
+
+    return RegisterCoordinateSystem;
   }
 }
 
