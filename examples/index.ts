@@ -18,11 +18,21 @@ const layer = new TileLayer({
   }),
 });
 
-const map = new Map({
+const map1 = new Map({
   layers: [layer],
-  target: 'map',
+  target: 'map1',
   view: new View({
-    center: [0, 0],
+    projection: 'EPSG:4326',
+    center: [113.53450137499999, 34.44104525],
+    zoom: 2,
+  }),
+});
+
+const map2 = new Map({
+  layers: [layer],
+  target: 'map2',
+  view: new View({
+    center: fromLonLat([113.53450137499999, 34.44104525]),
     zoom: 2,
   }),
 });
@@ -140,11 +150,24 @@ getJSON('./scatter.json', (res: any) => {
           zlevel: 1,
         }],
     };
-    const echartslayer = new EChartsLayer(option, {
+    const echartslayer1 = new EChartsLayer(option, {
+      id: '1',
       hideOnMoving: false,
       hideOnZooming: false,
       forcedPrecomposeRerender: true,
     });
-    echartslayer.appendTo(map);
+
+    const echartslayer2 = new EChartsLayer(option, {
+      id: '2',
+      hideOnMoving: false,
+      hideOnZooming: false,
+      forcedPrecomposeRerender: true,
+    });
+    map1.addOverlay(echartslayer1);
+    map2.addOverlay(echartslayer2);
+
+    console.log(echartslayer1, echartslayer2);
+    // echartslayer1.appendTo(map1);
+    // echartslayer2.appendTo(map2);
   }
 });
