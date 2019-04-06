@@ -101,6 +101,7 @@ class EChartsLayer extends OverlayLayer{
    */
   setChartOptions (options: undefined | null | object = {}) {
     this.$chartOptions = options;
+    this.clearAndRedraw();
     return this;
   }
 
@@ -192,6 +193,7 @@ class EChartsLayer extends OverlayLayer{
    */
   render () {
     super.render();
+    console.log('11');
     if (!this.$chart) {
       // @ts-ignore
       this.$chart = echarts.init(this.element);
@@ -201,7 +203,6 @@ class EChartsLayer extends OverlayLayer{
       }
     } else if (this.isVisible()) {
       this.$chart.resize();
-      this.reRender();
     }
   }
 
@@ -296,13 +297,6 @@ class EChartsLayer extends OverlayLayer{
       }
     }
     return options;
-  }
-
-  /**
-   * re-render
-   */
-  private reRender () {
-    this.clearAndRedraw();
   }
 
   private getCoordinateSystem (options?: object) {
