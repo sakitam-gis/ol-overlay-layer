@@ -22,7 +22,7 @@
     "module": "ESNext",
     "sourceMap": true,
     "rootDirs": [
-      "src"
+      "examples"
     ],
     "removeComments": true,
     "forceConsistentCasingInFileNames": true,
@@ -37,7 +37,7 @@
     ]
   },
   "include": [
-    "src"
+    "examples"
   ],
   "exclude": [
     "dist",

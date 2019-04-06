@@ -94,7 +94,6 @@ class OverlayLayer extends Overlay {
       return;
     }
 
-    // const pixel = map.getPixelFromCoordinate(position);
     const mapSize = map.getSize();
     if (!this._size) {
       this.updateViewSize(mapSize);

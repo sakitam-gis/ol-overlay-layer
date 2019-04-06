@@ -31,6 +31,7 @@ const config = Object.assign(baseConfig, {
 const index = config.plugins.findIndex(item => item.name === 'rpt2');
 const index1 = config.plugins.findIndex(item => item.name === 'tslint');
 config.plugins.splice(index, 1, typescript({
+  tsconfig: 'tsconfig-demo.json',
   clean: false,
   // outDir: resolve('types/'),
   declarationDir: 'examples',
