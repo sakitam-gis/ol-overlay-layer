@@ -24,11 +24,15 @@
     "demo": "rollup -wm -c build/rollup-demo-config.js",
     "build": "rollup -c build/rollup-prod-config.js"
   },
-  "dependencies": {
-    "echarts": "^4.2.1",
-    "ol": "^5.3.1"
+  "peerDependencies": {
+    "echarts": "^4.0.0",
+    "ol": "^5.0.0"
   },
+  "dependencies": {},
   "devDependencies": {
+    "gh-pages": "^1.2.0",
+    "echarts": "^4.2.1",
+    "ol": "^5.3.1",
     "@babel/core": "^7.3.4",
     "@babel/plugin-external-helpers": "^7.2.0",
     "@babel/plugin-proposal-class-properties": "^7.3.4",
@@ -44,6 +48,7 @@
     "rollup-plugin-commonjs": "^9.2.1",
     "rollup-plugin-json": "^3.1.0",
     "rollup-plugin-local-resolve": "^1.0.7",
+    "rollup-plugin-multi-entry": "^2.1.0",
     "rollup-plugin-node-resolve": "^4.0.1",
     "rollup-plugin-replace": "^2.1.0",
     "rollup-plugin-serve": "^1.0.1",
@@ -64,5 +69,5 @@
     "last 2 versions",
     "not ie <= 8"
   ],
-  "license": "BSD 3-Clause"
+  "license": "MIT"
 }
