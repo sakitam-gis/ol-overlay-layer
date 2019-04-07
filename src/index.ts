@@ -196,17 +196,17 @@ class OverlayLayer extends OlObj {
     // view.on('change:rotation', this.render);
     // map.on('postcompose', this.render);
     // map.on('postrender', this.render_);
-    // map.on('precompose', this.render);
-    map.on('movestart', this.render);
-    map.on('moveend', this.render);
+    map.on('precompose', this.render);
+    // map.on('movestart', this.render);
+    // map.on('moveend', this.render);
     this.initedEvent = true;
   }
 
   private unBindEvent() {
     const map = this.getMap();
-    map.un('rendercomplete', this.render);
-    map.un('postcompose', this.render);
-    map.un('postrender', this.render);
+    // map.un('rendercomplete', this.render);
+    // map.un('postcompose', this.render);
+    // map.un('postrender', this.render);
     map.un('precompose', this.render);
     map.un('change:size', this.checkUpdate);
     this.initedEvent = false;
