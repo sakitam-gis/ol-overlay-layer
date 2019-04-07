@@ -84,10 +84,8 @@ function initMap(id: string) {
         id: '2',
       });
 
-      map2.addOverlay(echartslayer2);
-
       console.log(echartslayer2);
-      // echartslayer2.appendTo(map2);
+      echartslayer2.appendTo(map2);
     }
   });
 }

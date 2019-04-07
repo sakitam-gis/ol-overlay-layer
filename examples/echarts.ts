@@ -20,7 +20,7 @@ import OverlayLayer from '../';
 
 class EChartsLayer extends OverlayLayer{
   static formatGeoJSON = formatGeoJSON;
-  private readonly $options: object;
+  // private readonly $options: object;
   private $chartOptions: object | undefined | null;
   private $chart: null | any;
   private _isRegistered: boolean;
@@ -81,7 +81,7 @@ class EChartsLayer extends OverlayLayer{
    */
   appendTo (map: any) {
     if (map && map instanceof Map) {
-      map.addOverlay(this);
+      this.setMap(map);
     } else {
       throw new Error('not map object');
     }
@@ -137,30 +137,6 @@ class EChartsLayer extends OverlayLayer{
   }
 
   /**
-   * is visible
-   * @returns {Element|*|boolean}
-   * @private
-   */
-  isVisible (): boolean {
-    // @ts-ignore
-    return this.rendered.visible;
-  }
-
-  /**
-   * show layer
-   */
-  show () {
-    super.setVisible(true);
-  }
-
-  /**
-   * hide layer
-   */
-  hide () {
-    super.setVisible(false);
-  }
-
-  /**
    * remove layer
    */
   remove () {
@@ -192,7 +168,6 @@ class EChartsLayer extends OverlayLayer{
    * render
    */
   render () {
-    super.render();
     console.log('11');
     if (!this.$chart) {
       // @ts-ignore
@@ -202,7 +177,8 @@ class EChartsLayer extends OverlayLayer{
         this.$chart.setOption(this.reConverData(this.$chartOptions), false);
       }
     } else if (this.isVisible()) {
-      this.$chart.resize();
+      // this.$chart.resize();
+      this.clearAndRedraw();
     }
   }
 

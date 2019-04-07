@@ -151,12 +151,10 @@ function initMap() {
         hideOnZooming: false,
         forcedPrecomposeRerender: true,
       });
-      map1.addOverlay(echartslayer1);
-      map2.addOverlay(echartslayer2);
 
       console.log(echartslayer1, echartslayer2);
-      // echartslayer1.appendTo(map1);
-      // echartslayer2.appendTo(map2);
+      echartslayer1.appendTo(map1);
+      echartslayer2.appendTo(map2);
     }
   });
 }

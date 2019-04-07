@@ -1,76 +1,131 @@
 // @ts-ignore
-import Overlay from 'ol/Overlay';
-import {
-  Size,
-  Pixel,
-  Coordinate,
-  OverlayPositioning,
-} from './Overlay';
+import { Object as OlObj, Map } from 'ol';
+// @ts-ignore
+import { listen, unlistenByKey } from 'ol/events';
 
-class OverlayLayer extends Overlay {
+function removeNode(node: HTMLElement) {
+  return node && node.parentNode ? node.parentNode.removeChild(node) : null;
+}
+
+const _options = {
+  forcedRerender: false, // Force re-rendering
+  forcedPrecomposeRerender: false, // force pre re-render
+  hideOnZooming: false, // when zooming hide layer
+  hideOnMoving: false, // when moving hide layer
+  hideOnRotating: false, // // when Rotating hide layer
+};
+
+class OverlayLayer extends OlObj {
   public element: HTMLElement | undefined;
-  private _size: Size | undefined;
+  public $options: object;
+  private _size: number[] | undefined;
+  private readonly id: any;
+  private readonly insertFirst: Boolean | undefined;
+  private initedEvent: Boolean;
+  private visible: Boolean;
   constructor(options: object) {
-    super(Object.assign(options, {
-      stopEvent: false, // must be false
-      offset: [0, 0],
-    }));
+    super(options);
+
+    this.$options = Object.assign(_options, options);
+
+    // @ts-ignore
+    this.id = options.id;
 
     /**
      * size
      */
     this._size = undefined;
+
+    /**
+     * event has inited
+     */
+    this.initedEvent = false;
+
+    /**
+     * layer visible
+     */
+    this.visible = true;
+
+    // @ts-ignore
+    this.insertFirst = options.insertFirst !== undefined ? options.insertFirst : true;
+
+    this.render = this.render.bind(this);
+    this.checkUpdate = this.checkUpdate.bind(this);
+    this.createLayerContainer();
+
+    listen(this, 'change:map', this.handleMapChanged, this);
   }
 
-  setMap (map: any): void {
-    super.setMap(map);
+  getElement(): HTMLElement | undefined {
+    return this.element;
+  }
+
+  getId(): any {
+    return this.id;
+  }
+
+  setMap(map: any): void {
+    this.set('map', map);
+  }
+
+  getMap() {
+    return this.get('map');
   }
 
   /**
-   * overwrite setOffset: must be [0, 0]
-   * @param offset
+   * create container
    */
-  setOffset(offset: number[] = [0, 0]) {
-    super.setOffset(offset && [0, 0]);
+  createLayerContainer () {
+    const container = (this.element = document.createElement('div'));
+    container.style.position = 'absolute';
+    container.style.top = '0px';
+    container.style.left = '0px';
+    container.style.right = '0px';
+    container.style.bottom = '0px';
   }
 
   /**
-   * overwrite setPositioning: must be top-left
-   * @param positioning
+   * handle map changed
    */
-  setPositioning(positioning: OverlayPositioning = 'top-left') {
-    super.setPositioning(positioning && 'top-left');
+  handleMapChanged () {
+    if (this.initedEvent) {
+      this.element && removeNode(this.element);
+      this.unBindEvent();
+    }
+    const map = this.getMap();
+    if (map) {
+      this.bindEvent(map);
+      const container = map.getOverlayContainer();
+      if (this.insertFirst) {
+        container.insertBefore(this.element, container.childNodes[0] || null);
+      } else {
+        container.appendChild(this.element);
+      }
+    }
   }
-
-  panIntoView(){}
 
   /**
    * bind map update
    */
   render(): void {
     this.dispatchEvent({
-      type: 'preupdate',
+      type: 'render',
       value: this,
     });
-    this.updatePixelPosition();
   }
 
-  /**
-   * overwrite getPosition method: top-left;
-   */
-  getPosition(): Coordinate | void {
-    const map = this.getMap();
-    if (!map) return;
-    const size = map.getSize();
-    const extent = map.getView().calculateExtent(size);
-    return [extent[0], extent[3]];
+  prerender(): void {
+    this.dispatchEvent({
+      type: 'prerender',
+      value: this,
+    });
   }
 
   /**
    * update view size
    * @param size
    */
-  updateViewSize(size: Size): void {
+  updateViewSize(size: number[]): void {
     if (!this.element) return;
     this._size = size;
     this.element.style.width = `${size[0]}px`;
@@ -79,17 +134,12 @@ class OverlayLayer extends Overlay {
     this.element.setAttribute('height', String(size[1]));
   }
 
-  getPositioning(): OverlayPositioning {
-    return 'top-left';
-  }
-
   /**
-   * update layer position, must be [0, 0]
+   * update layer
    */
-  updatePixelPosition(){
+  checkUpdate() {
     const map = this.getMap();
-    const position = this.getPosition();
-    if (!map || !map.isRendered() || !position) {
+    if (!map || !map.isRendered()) {
       this.setVisible(false);
       return;
     }
@@ -102,32 +152,72 @@ class OverlayLayer extends Overlay {
         || (this._size[0] !== mapSize[0] || this._size[1] !== mapSize[1]);
       _update && this.updateViewSize(mapSize);
     }
-    this.updateRenderedPosition([0, 0], mapSize);
-    this.dispatchEvent({
-      type: 'updated',
-      value: position,
-    });
-  }
-
-  getMap() {
-    return super.getMap();
   }
 
   setVisible(visible: Boolean): void {
-    super.setVisible(visible);
+    if (this.visible !== visible) {
+      // @ts-ignore
+      this.element.style.display = visible ? '' : 'none';
+      this.visible = visible;
+    }
     this.dispatchEvent({
       type: 'change:visible ',
       value: visible,
     });
   }
 
-  // @ts-ignore
-  dispatchEvent(...args) {
+  /**
+   * is visible
+   * @returns {Element|*|boolean}
+   * @private
+   */
+  isVisible (): Boolean {
+    return this.visible;
+  }
+
+  dispatchEvent(...args: any) {
     super.dispatchEvent(...args);
   }
 
-  updateRenderedPosition(pixel: Pixel, mapSize: Size): void {
-    super.updateRenderedPosition(pixel, mapSize);
+  show() {
+    this.setVisible(true);
+  }
+
+  hide() {
+    this.setVisible(false);
+  }
+
+  private bindEvent(map: any) {
+    // const view = map.getView();
+    // map.on('rendercomplete', this.render);
+    map.on('change:size', this.checkUpdate);
+    // view.on('change:center', this.render);
+    // view.on('change:resolution', this.render);
+    // view.on('change:rotation', this.render);
+    // map.on('postcompose', this.render);
+    // map.on('postrender', this.render_);
+    // map.on('precompose', this.render);
+    map.on('movestart', this.render);
+    map.on('moveend', this.render);
+    this.initedEvent = true;
+  }
+
+  private unBindEvent() {
+    const map = this.getMap();
+    map.un('rendercomplete', this.render);
+    map.un('postcompose', this.render);
+    map.un('postrender', this.render);
+    map.un('precompose', this.render);
+    map.un('change:size', this.checkUpdate);
+    this.initedEvent = false;
+  }
+
+  private set(key: string, value: any) {
+    return super.set(key, value);
+  }
+
+  private get(key: string) {
+    return super.get(key);
   }
 }
 
